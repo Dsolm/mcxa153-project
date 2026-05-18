@@ -2,67 +2,97 @@
 #include "pin_mux.h"
 #include "clock_config.h"
 #include "board.h"
+#include "fsl_debug_console.h"
 
 #include "display.h"
 #include "gfx.h"
+#include "keypad.h"
 
-static void delay_anim(volatile unsigned int t)
+#define SCAN_PERIOD_MS 5U
+
+static volatile uint8_t g_tick_flag = 0;
+
+void SysTick_Handler(void)
 {
-    while (t--) {
-        __asm volatile ("nop");
-    }
+    KEYPAD_Scan();
+    g_tick_flag = 1;
 }
 
-static void draw_dot(int x, int y, int active)
+static void draw_screen(const char *input, char last_key)
 {
-    if (active)
-        GFX_FillCircle(x, y, 4, 7);
-    else
-        GFX_FillCircle(x, y, 3, 2);
-}
+    static char s[2] = { '_', '\0' };
+	GFX_Clear(0);
 
-static void draw_logo_letters(int count)
-{
-    const char *name = "GAMEMEN";
-    int x = 22;
-    int y = 52;
+    GFX_DrawString(20, 20, "KEYPAD TEST", 7, 0, 2);
 
-    for (int i = 0; i < count; i++) {
-        char s[2] = { name[i], '\0' };
-        GFX_DrawString(x + i * 12, y, s, 7, 0, 2);
-    }
+    GFX_DrawString(12, 60, "Last key:", 3, 0, 1);
+
+
+    GFX_DrawString(12, 95, "Input:", 3, 0, 1);
+    GFX_DrawString(12, 112, input, 7, 0, 1);
+
+    GFX_DrawString(5, 148, "B:clear  D:reset", 2, 0, 1);
+
+    if (last_key != 0) {
+      	s[0] = last_key;
+          GFX_DrawString(0, 0, s, 2, 0, 2);
+      }
+
+    GFX_Flush();
 }
 
 int main(void)
 {
     BOARD_InitBootPins();
     BOARD_InitBootClocks();
+    BOARD_InitDebugConsole();
 
     Display_Init();
     GFX_Init();
+    //KEYPAD_Init();
+
+    GFX_Clear(0);
+    GFX_Flush();
+    char input[20];
+    int input_len = 0;
+    char last_key = 0;
+
+    input[0] = '\0';
+
+    draw_screen(input, last_key);
+
+    SysTick_Config(SystemCoreClock / 1000U * SCAN_PERIOD_MS);
 
     while (1) {
-        for (int i = 1; i <= 7; i++) {
-            GFX_Clear(0);
-            draw_logo_letters(i);
-            GFX_Flush();
-            delay_anim(180000);
+        if (!g_tick_flag) {
+            __WFI();
+            continue;
         }
 
-        for (int frame = 0; frame < 40; frame++) {
-            GFX_Clear(0);
+        g_tick_flag = 0;
 
-            draw_logo_letters(7);
-            GFX_DrawString(40, 78, "loading", 3, 0, 1);
+        char k = KEYPAD_GetKey();
 
-            int active = frame % 4;
-            draw_dot(44, 105, active == 0);
-            draw_dot(58, 105, active == 1);
-            draw_dot(72, 105, active == 2);
-            draw_dot(86, 105, active == 3);
+        if (k != KEYPAD_NO_KEY) {
+            PRINTF("key=%c\r\n", k);
 
-            GFX_Flush();
-            delay_anim(150000);
+            last_key = k;
+
+            if (k == 'B') {
+                input_len = 0;
+                input[0] = '\0';
+            } else if (k == 'D') {
+                input_len = 0;
+                input[0] = '\0';
+                last_key = 0;
+            } else {
+                if (input_len < 19) {
+                    input[input_len++] = k;
+                    input[input_len] = '\0';
+                }
+            }
+
+            draw_screen(input, last_key);
         }
     }
 }

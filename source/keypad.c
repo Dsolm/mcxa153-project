@@ -80,11 +80,11 @@ static const pin_def_t col_pins[4] = {
 void KEYPAD_Init(void)
 {
     CLOCK_EnableClock(kCLOCK_GatePORT1);
-    CLOCK_EnableClock(kCLOCK_GatePORT2);
-    CLOCK_EnableClock(kCLOCK_GatePORT3);
+    //CLOCK_EnableClock(kCLOCK_GatePORT2);
+    //CLOCK_EnableClock(kCLOCK_GatePORT3);
     CLOCK_EnableClock(kCLOCK_GateGPIO1);
-    CLOCK_EnableClock(kCLOCK_GateGPIO2);
-    CLOCK_EnableClock(kCLOCK_GateGPIO3);
+    //CLOCK_EnableClock(kCLOCK_GateGPIO2);
+    //CLOCK_EnableClock(kCLOCK_GateGPIO3);
     /* MCXA153 必须先释放外设 reset, 否则写寄存器触发 BusFault */
 	RESET_PeripheralReset(kPORT1_RST_SHIFT_RSTn);
 	RESET_PeripheralReset(kPORT2_RST_SHIFT_RSTn);

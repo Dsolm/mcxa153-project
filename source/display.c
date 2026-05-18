@@ -124,7 +124,7 @@ static void gpio_init(void)
     const gpio_pin_config_t out_high = { kGPIO_DigitalOutput, 1 };
     GPIO_PinInit(GPIO3, 15U, &out_high);
     GPIO_PinInit(GPIO3, 14U, &out_high);
-    GPIO_PinInit(GPIO2,  6U, &out_high);
+    //GPIO_PinInit(GPIO2,  6U, &out_high);
 }
 /* ============== LPSPI 初始化 ============== */
 static void spi_init(void)
