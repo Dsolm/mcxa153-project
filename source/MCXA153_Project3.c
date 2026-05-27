@@ -36,8 +36,10 @@ static void draw_screen(const char *input, char last_key)
     if (last_key != 0) {
       	s[0] = last_key;
           GFX_DrawString(0, 0, s, 2, 0, 2);
-      }
+    }
 
+    tetris_draw();
+  
     GFX_Flush();
 }
 
@@ -62,6 +64,7 @@ int main(void)
     draw_screen(input, last_key);
 
     SysTick_Config(SystemCoreClock / 1000U * SCAN_PERIOD_MS);
+    tetris_init();
 
     while (1) {
         if (!g_tick_flag) {
@@ -92,6 +95,7 @@ int main(void)
                 }
             }
 
+            tetris_tick();
             draw_screen(input, last_key);
         }
     }
